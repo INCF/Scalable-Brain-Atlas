@@ -1,0 +1,95 @@
+div.myTree {
+  left: -1.5ex;
+}
+ul.myList {
+  list-style-type: none;
+  margin-top: 0px;
+  margin-left: 2ex;
+  padding-left: 0px;
+}
+li.mt_scalar {
+	margin: 0px;
+	margin-left: 4px;
+  border-left: 2px solid #ccc;
+  padding-left: 20px;
+  text-indent: -12px;
+}
+span.mt_scalar {
+  color: #006;
+}
+span.myToggle {
+  color: #00d;
+  text-align: center;
+  margin-right: 2px;
+}
+span.myNodeOptions {
+  position: relative;
+  color: #00d;
+  text-align: center;
+}
+img.myTreeButton {
+  border: 1px solid #ccc; 
+  background: #00d;
+}
+img.myTreeButton:hover {
+  background: #b00;
+}
+img.myTreeNoButton {
+  border: 1px solid transparent; 
+}
+img.myTreeBullet {
+  border: 1px;
+}
+b.mt_scalar {
+	font-weight: normal;
+	font-variant: small-caps;
+}
+b.myError {
+  color: #c00;
+}
+b.myWarning {
+  color: #054;
+}
+b.myKey {
+  color: #000;
+  font-weight: normal;
+}
+b.myValue {
+  color: #050;
+  font-weight: normal;
+}
+
+table.myItem {
+  margin-left: 1ex;
+  border-left: 1px solid #000; 
+  border-top: 1px solid #000; 
+  border-right: 1px solid #dfb; 
+  border-bottom: 1px solid #dfb; 
+  padding: 2px;
+  background: #fff;
+}
+
+span.myRecordKey {
+  width: 20ex;
+  vertical-align: middle;
+}
+span.myRecordColon {
+  width: 2ex;
+  text-align: center;
+}
+span.myRecordValue {
+  width: 100ex;
+}
+
+div.autoHide,div.popup {
+  background: #fff;
+  color: #000;
+  border: 1px solid #777;
+  padding: 3px;
+}
+a.button {
+  padding: 1px;
+}
+a.button:link { text-decoration: none; color: #00b }
+a.button:visited { text-decoration: none; color: #00b }
+a.button:hover { text-decoration: none; background: #ccc; color: #00b }

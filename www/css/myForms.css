@@ -1,0 +1,83 @@
+div.myFormWindow {
+  background-color: #e8e8e8; 
+  color: #000;
+  border-left: 1px solid #000; 
+  border-top: 1px solid #000; 
+  border-right: 1px solid #000; 
+  border-bottom: 1px solid #000;
+  z-index: 10;
+  /* if overflow is not auto, mozilla will not show cursor in input type="text"! */
+  overflow: auto;
+}
+table.myForm { 
+  background-image: url(../img/bgedit.gif); 
+  background-position: top left;
+  background-repeat: no-repeat;
+  border-top: 4px solid #8c0; 
+  border-bottom: 0px solid #9e0; 
+}
+table.edit { 
+  font-family: trebuchet MS, arial, helvetica, sans-serif;
+  font-size: 12px;
+  margin: 0px;
+}
+
+.myFormMouseover { background-color: #9e0; }
+
+input.menu { margin: 2px; }
+select.menu { margin: 2px; }
+option.empty, option.comment { color: #888 }
+
+.myFormCaller { 
+  background-image: url(../img/myformcorner.gif); 
+  background-position: bottom right; 
+  background-repeat: no-repeat;
+}
+
+a.myFormLink {
+  position: relative;
+  background-position: bottom right; 
+  background-repeat: no-repeat;
+}
+a.myFormLink:hover {
+  color: #000;
+  text-decoration: none;
+  background-color: #9e0; 
+}
+a.mf_help {
+	border: 1px solid #bbb;
+	background: #fff;
+	padding-left: 2px;
+  padding-right: 2px;
+}
+
+ul.autosuggest {
+  background: #ffe;
+  color: #000;
+  padding: 1px;
+  margin: 0px;
+  list-style-type: none;
+  text-align: left;   
+}
+
+.autosuggest li {
+  padding-left: 2px;
+  padding-right: 2px;
+  color: #555;
+}
+.autosuggest li b {
+  color: #000;
+}
+.autosuggest .highlight {
+  background: #007;
+  color: #ddd;
+}
+.autosuggest .highlight b {
+  color: #fff;
+}
+
+.autosuggest .nomatch {
+  background: #fff;
+  color: #666;
+  font-style: italic;
+}
