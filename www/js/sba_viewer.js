@@ -140,6 +140,19 @@ function sbaViewer_class(config,svgCapable) {
   if (yLim == undefined) yLim = [0,1];
   this.sliceYLim = yLim;
   
+  // new: RAS limits
+  var rasLimits = config.rasLimits;
+  if (rasLimits == undefined) {
+    pos0 = SLICE_POS[0];
+    pos1 = SLICE_POS[SLICE_POS.length];
+    rasLimits = [
+      xLim,
+      [pos0,pos1],
+      yLim
+    ];
+  }
+  this.rasLimits = rasLimits;
+  
   // positioning 2d
   this.height2d = (config.height2d ? config.height2d : 374); // pixel height of 2d slice view
 
@@ -150,7 +163,7 @@ function sbaViewer_class(config,svgCapable) {
 
   // default slice spacing: fit in available viewport width
   var pxSliceSpacing = config.width3d/(this.numSlices-1+10);
-  this.bothHemispheres = (this.aspectRatio>=0.9);
+  this.bothHemispheres = config.hemisphere ? config.hemisphere == 'LR' : this.aspectRatio>=0.9;
   var pxWidthSlice = this.height3d*this.aspectRatio*(this.bothHemispheres ? 0.5 : 1);
   pxWidthSlice *= (config.sliceSpacing == undefined ? 105 : config.sliceSpacing)/100;
   this.sineAngle = 10*pxSliceSpacing/pxWidthSlice;
@@ -170,7 +183,12 @@ function sbaViewer_class(config,svgCapable) {
   }
 
   // . 3d rendering overlay
-  if (config.overlay3d != false) this.overlay3dTransparency = 0;
+  if (config.overlay3d !== false) this.overlay3dTransparency = 0;
+  
+  // . 3d clipping
+  this.clip3d = { signX: 0 };
+  if (this.bothHemispheres) this.clip3d.signX = 1;
+
   
   // . 2d overlay
   this.useOverlays = (config.overlays != undefined);
@@ -179,9 +197,11 @@ function sbaViewer_class(config,svgCapable) {
     if (config.featuredOverlay != undefined) {
       this.overlayMode = 1;
       this.overlayKey = config.featuredOverlay;
+      this.overlayWhite = (this.overlays[this.overlayKey].whitebackground ? true : false);
     } else {
       this.overlayMode = 0;
       this.overlayKey = undefined;
+      this.overlayWhite = false;
     }
   }
   
@@ -271,13 +291,6 @@ sbaViewer_class.prototype.applyStateChange = function(newState) {
     this.showSlice3D(this.orig2slice(newState.origSlice));
   }
 
-  // adjust permalink to reflect new state
-  /*var pm = document.getElementById('permalink');
-  var me = this;
-  pm.onclick = function(ev) {
-    me.onClickPermaLink(ev);
-  }
-  */  
   // update STATE variable
   this.setState(newState);
 
@@ -342,10 +355,13 @@ sbaViewer_class.prototype.view3d_innerHTML = function(angle,modeSpacing3d) {
   var pxSliceSpacing = sliceSpacing/svgPerPx;
   var pxWidth = Math.round(pxWidth3d+(this.numSlices-1)*pxSliceSpacing);
   var topMargin = Math.round(bb[3]*0.05);
-  var bb3d = [bb[0], bb[1]-topMargin, Math.round(svgPerPx*pxWidth), bb[3]+2*topMargin];
+  var bb3d = [bb[0], bb[1]-2*topMargin, Math.round(svgPerPx*pxWidth), bb[3]+2*topMargin];
 
   a.push('<svg id="VIEW3D_SVG_ELEM" class="slice3d" xmlns="'+this.nameSpace+'" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" preserveAspectRatio="xMinYMin meet" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; fill-rule:evenodd" width="'+pxWidth+'px" height="'+Math.round(pxHeight*1.1)+'px" viewBox="'+bb3d.join(' ')+'">');
   a.push('<g id="VIEW3D_BB">');
+  // . saggital slice underlay
+  if (this.saggital3d !== false) a.push('<g id="SAGGITAL3D"></g>');
+  
   var sMin = (this.bothHemispheres ? 6 : 1);
   // x coordinate at 0 mm
   var x0 = this.mm2svg([0,0]);
@@ -356,12 +372,14 @@ sbaViewer_class.prototype.view3d_innerHTML = function(angle,modeSpacing3d) {
     if (this.posteriorSliceView) {
       a.push('<g transform="translate('+bb[2]+') scale(-1,1)">');
     }
-    if (this.bothHemispheres) {
-      if (this.posteriorSliceView) a.push('<clipPath id="VIEW3D_LR"><rect x="'+(0)+'" width="'+(x0)+'" height="'+(bb[3])+'"/></clipPath>');
+    var signX = this.clip3d.signX;
+    if (signX) {
+      if (this.posteriorSliceView) signX = -signX;
+      if (signX<0) a.push('<clipPath id="VIEW3D_LR"><rect x="'+(0)+'" width="'+(x0)+'" height="'+(bb[3])+'"/></clipPath>');
       else a.push('<clipPath id="VIEW3D_LR"><rect x="'+(x0)+'" width="'+(bb[2])+'" height="'+(bb[3])+'"/></clipPath>');
     }
     if (HULLS != undefined) {
-      a.push('<path id="HULL3D_'+(s)+'" class="hull" d="'+HULLS[s-1]+'"/>');
+      a.push('<path id="HULL3D_'+(s)+'" class="hull" d="'+HULLS[s-1][0]+'"'+(signX ? ' clip-path="url(#VIEW3D_LR)"' : '')+'/>');
     } else {
       // future: needs refinement
       a.push('<circle id="HULL3D_'+(s)+'" class="hull" cx="2in" cy="2in" r="1.0in"/>')
@@ -373,15 +391,15 @@ sbaViewer_class.prototype.view3d_innerHTML = function(angle,modeSpacing3d) {
         var wm = (RGB_WHITE[r] != undefined);
         var rData = sData[r];
         for (var i in rData) if (rData.hasOwnProperty(i)) {
-          a.push('<path '+(wm ? 'class="wm" ':'class="gm" ')+'d="'+SVG_PATHS[rData[i]]+'"'+(this.bothHemispheres ? ' clip-path="url(#VIEW3D_LR)"' : '')+'/>');
+          a.push('<path '+(wm ? 'class="wm" ':'class="gm" ')+'d="'+SVG_PATHS[rData[i]]+'"'+(signX ? ' clip-path="url(#VIEW3D_LR)"' : '')+'/>');
         }
       }
       a.push('</g>');    
     }
-    a.push('<g id="highlight_'+(s)+'"></g>');
+    a.push('<g id="highlight_'+(s)+'"'+(signX ? ' clip-path="url(#VIEW3D_LR)"' : '')+'></g>');
     if ((s-1) % 10 == 0) {
       if (HULLS != undefined) {
-        a.push('<path class="hull_10" onclick="sbaViewer.selectSlice('+(s)+')" d="'+HULLS[s-1]+'"/>');
+        a.push('<path class="hull_10" onclick="sbaViewer.selectSlice('+(s)+')" d="'+HULLS[s-1][0]+'"/>');
       } else {
         a.push('<circle class="hull_10" onclick="sbaViewer.selectSlice('+(s)+')" cx="2in" cy="2in" r="1.0in"/>');
       }
@@ -408,13 +426,18 @@ sbaViewer_class.prototype.fitOverlay3d = function(elem) {
   elem.setAttribute('height',view3d_bb.height+100);
 }
 
-sbaViewer_class.prototype.showOverlay3d = function(inputElem,show) {
+sbaViewer_class.prototype.showOverlay3d = function(inputElem) {
+  // remove saggital underlay if present
+  if (this.saggital3d === 1) {
+    var elem = document.getElementById('SBAVIEWER_SHOWSAGGITAL3D');    
+    this.showSaggital3d(elem);
+  }
   var elem = document.getElementById('OVERLAY3D');
   var ch = elem.childNodes;
   var opacity = this.overlay3dTransparency+0.333;
   if (ch && ch.length) {
     ch = ch[0];
-    if (show==false || opacity>1) {
+    if (opacity>1) {
       elem.removeChild(ch);
       inputElem.value = 'Activate';
       opacity = 0;
@@ -422,16 +445,55 @@ sbaViewer_class.prototype.showOverlay3d = function(inputElem,show) {
       ch.setAttribute('opacity',opacity);
       if (opacity>0.99) inputElem.value = 'Remove'; 
     }
-  } else if(show) {
+  } else {
     ch = document.createElementNS(this.nameSpace,'image');
     ch.setAttribute('preserveAspectRatio','none');
     ch.setAttribute('opacity',opacity);
     ch.setAttributeNS('http://www.w3.org/1999/xlink','xlink:href','../'+this.template+'/3dbar_overlay.png');
     this.fitOverlay3d(ch);
     elem.appendChild(ch);
-    inputElem.value = 'Make less transparent'; 
+    inputElem.value = 'Intensify'; 
   }
   this.overlay3dTransparency = opacity;
+}
+
+sbaViewer_class.prototype.fitSaggital3d = function(elem,ch) {
+  var elem1 = document.getElementById('HULL3D_1');
+  var elem2 = document.getElementById('HULL3D_'+this.numSlices);
+  var M1 = elem.getTransformToElement(elem1);
+  var M2 = elem.getTransformToElement(elem2);
+  // var yLim = this.yLim;
+  var xzSvg = this.mm2svg([0,0]);
+  var xAnt = (xzSvg[0]-M1.e)/M1.a;
+  var xPost = (xzSvg[0]-M2.e)/M2.a;
+  yLimSlices = [SLICE_POS[SLICE_POS.length-1],SLICE_POS[0]];
+  yLimVolume = this.rasLimits[1]; // posterior - anterior
+  var cf = this.sliceCoordFrame;
+  var svgPerMm = (xAnt-xPost)/(yLimSlices[1]-yLimSlices[0]);
+  var x = xAnt+(yLimVolume[1]-yLimSlices[1])*svgPerMm;
+  var width = Math.abs((yLimVolume[1]-yLimVolume[0])*svgPerMm);
+  ch.setAttribute('x',x);
+  ch.setAttribute('y',cf[1]+M1.f);
+  ch.setAttribute('width',width);
+  ch.setAttribute('height',cf[3]+M1.f);
+}
+
+sbaViewer_class.prototype.showSaggital3d = function(inputElem) {
+  var elem = document.getElementById('SAGGITAL3D');
+  var ch = elem.childNodes;
+  if (ch && ch.length) {
+    elem.removeChild(ch[0]);
+    inputElem.value = 'Activate';
+    this.saggital3d = -1;
+  } else {
+    ch = document.createElementNS(this.nameSpace,'image');
+    ch.setAttribute('preserveAspectRatio','none');
+    ch.setAttributeNS('http://www.w3.org/1999/xlink','xlink:href','../'+this.template+'/mid_saggital.jpg');
+    this.fitSaggital3d(elem,ch);
+    elem.appendChild(ch);
+    inputElem.value = 'Remove'; 
+    this.saggital3d = 1;
+  }
 }
 
 sbaViewer_class.prototype.showView3d = function(angle,modeSpacing3d) {
@@ -721,13 +783,13 @@ sbaViewer_class.prototype.view2d_innerHTML = function(s,acr) {
   var widthPx = this.height2d*this.aspectRatio;
 
   var pathClass = '';
-  if (this.overlayMode==1) pathClass += ' nofill';
+  if (this.overlayMode==1) pathClass += ' nofill' + (this.overlayWhite ? ' onwhite' : '');
   else if (this.overlayMode==2) pathClass += ' noborders';
   a.push('<svg id="VIEW2D_SVG_ELEM" class="slice2d" xmlns="'+this.nameSpace+'" xml:space="preserve" preserveAspectRatio="xMinYMin" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; fill-rule:evenodd" width="'+Math.round(widthPx)+'px" height="'+Math.round(heightPx)+'px" viewBox="'+bb.join(' ')+'" onmouseover="sbaViewer.mouseoverRegion(evt)" onmousemove="sbaViewer.mousemoveRegion(evt)" onmouseout="sbaViewer.mouseoutRegion(evt)">');
   var sData = BRAIN_SLICES[s-1];
   if (this.debug) { 
     // show hull in 2d view for debugging
-    a.push('<path id="HULL2D" class="hull_highlight" d="'+HULLS[s-1]+'"/>');
+    a.push('<path id="HULL2D" class="hull_highlight" d="'+HULLS[s-1][0]+'"/>');
   }
   var resultSet = this.resultSet;
   if (resultSet != undefined) {
@@ -835,7 +897,8 @@ sbaViewer_class.prototype.addOverlay2D = function(os) {
     return;
   }
   divElem.style.display = 'block';
-  var parts = this.overlays[this.overlayKey].source.match(/(.*[^%])(%\d+d)(.*)/);
+  var ovl = this.overlays[this.overlayKey];
+  var parts = ovl.source.match(/(.*[^%])(%\d+d)(.*)/);
   if (parts) {
     parts.shift();
     slice_no = os;
@@ -849,10 +912,10 @@ sbaViewer_class.prototype.addOverlay2D = function(os) {
       var svgWidth = svgElem.width.baseVal.value;
       var bb = this.boundingBox;
       var anchorBox = this.sliceCoordFrame;
-      var anchorUnit = this.overlays[this.overlayKey].anchorUnit;
+      var anchorUnit = ovl.anchorUnit;
       if (anchorUnit != undefined) {
         if (anchorUnit == 'svg') {
-          anchorBox = this.overlays[this.overlayKey].anchorBox;
+          anchorBox = ovl.anchorBox;
         } else {
           globalErrorConsole.addError('Unsupported anchorUnit "'+anchorUnit+'"');
         }
@@ -864,7 +927,12 @@ sbaViewer_class.prototype.addOverlay2D = function(os) {
       divElem.style.left = moveRight+'px';
       divElem.style.top = moveDown+'px';
     }
-    imgElem.src = '../'+this.template+'/'+parts.join('');
+    var img = '../'+this.template+'/'+parts.join('');
+    if (ovl.colorMap == 'jet') {
+      imgElem.src = '../php/jetimage.php?jpg='+encodeURIComponent(img);
+    } else {
+      imgElem.src = img;
+    }    
   }
   // future: let sba_viewer.js take over the toggle buttons from coronal3d.php
   document.getElementById('TOGGLE_'+this.overlayKey).className = "overlay-on";
@@ -1045,6 +1113,7 @@ sbaViewer_class.prototype.selectOverlay = function(key) {
       this.overlayMode = 1;
       document.getElementById('TOGGLE_'+key).className = "overlay-on";
       this.overlayKey = key;
+      this.overlayWhite = (this.overlays[this.overlayKey].whitebackground ? true : false);
     } else {
       if (this.overlayKey == key) {
         this.overlayMode = 0;
@@ -1054,10 +1123,19 @@ sbaViewer_class.prototype.selectOverlay = function(key) {
         document.getElementById('TOGGLE_'+this.overlayKey).className = "overlay-off";
         document.getElementById('TOGGLE_'+key).className = "overlay-on";      
         this.overlayKey = key;
+        this.overlayWhite = (this.overlays[this.overlayKey].whitebackground ? true : false);
       }
     }  
   }
   this.showView2d(this.currentOrigSlice,this.currentAcr);
+}
+
+sbaViewer_class.prototype.selectClip3d = function(param,val) {
+  if (param == 'signX') this.clip3d.signX = Number(val);
+  var state = this.getState();
+  this.showView3d(state.angle3d,state.spacing3d);
+  this.showRegion3D(state.acr);
+  this.showSlice3D(this.orig2slice(state.origSlice));
 }
 
 sbaViewer_class.prototype.prevSlice = function() {
@@ -1163,7 +1241,6 @@ sbaViewer_class.prototype.selectSpacing = function(mode) {
     elem = document.getElementById('OVERLAY3D');
     this.fitOverlay3d(elem.childNodes[0]);
   }
-alert('test');  
 }
 
 sbaViewer_class.prototype.prevAngle = function() {
@@ -1275,7 +1352,7 @@ sbaViewer_class.prototype.selectSuggestedRegion = function(acrPlusFullName) {
     var rgbList = this.getRgbList(acr);
     if (rgbList.length == 0) {
       // . but has not been delineated
-      alert('No polygon(s) defined for region "'+acrPlusFullName+'"');
+      globalErrorConsole.addError('No polygon(s) defined for region "'+acrPlusFullName+'"');
     } else {
       // . and can be shown!
       this.selectRegion(acr);
@@ -1352,8 +1429,10 @@ sbaViewer_class.prototype.hrefNeuroNames = function(nn) {
 
 sbaViewer_class.prototype.initSuggestions = function() {
   BS_SUGGESTIONS = {};
-  var validAcronyms = [];  
-  for (var acr in ACR_TO_FULL) if (ACR_TO_FULL.hasOwnProperty(acr)) if (this.isViewable(acr)) validAcronyms.push(acr);
+  var validAcronyms = [];
+  for (var acr in ACR_TO_FULL) {
+    if (ACR_TO_FULL.hasOwnProperty(acr)) if (this.isViewable(acr)) validAcronyms.push(acr);
+  }
   for (var i=0; i<validAcronyms.length; i++) {
     var acr = validAcronyms[i];
     var full = ACR_TO_FULL[acr];

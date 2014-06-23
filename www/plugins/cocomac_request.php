@@ -9,17 +9,16 @@ $args[3] = array('format'=>'SBA');
 $href = $cocomacRoot.'public/phpRequest.php?LIB=cocomac_api&CMD=public_getAxonalProjections&ARGS='.json_encode($args);
 $ans = @file_get_contents($href,NULL);
 
-// make sure that the returned content is json-encoded
-foreach ($http_response_header as $s) if (strncasecmp($s,'Content-type',12)===0) {
-  if (stripos($s,'application/json')===FALSE) {
-    header($s);
-    echo $ans;
-    return;
+if (!headers_sent()) {
+  // check if the returned content is valid json
+  header('Content-type: application/json; charset=utf-8');
+  $validJson = @json_decode($ans,TRUE);
+  if (isset($validJson) && !isset($validJson['errors'])) {
+    echo '{"result":'.$ans.'}';
+  } else {
+    echo '{"error":'.$ans.'}';
   }
 }
-if (!headers_sent()) {
-  header('Content-type: application/json; charset=utf-8');
-  echo $ans;
-}
+
 ?>
 

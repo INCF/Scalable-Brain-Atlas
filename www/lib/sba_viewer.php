@@ -6,7 +6,7 @@ function fixDecimals($v,$d) {
 
 function listTemplates($mode=NULL) {
   $publicOnly = !isset($_REQUEST['superuser']);
-  $notPublic = array('FP08'=>1,'MS10_on_F99'=>1);
+  $notPublic = array();
   $scriptfile = str_replace('\\','/',__FILE__);
   $sbaFolder = str_replace('/lib/sba_viewer.php','',$scriptfile);
   $templates = array();
@@ -37,6 +37,39 @@ function listTemplates($mode=NULL) {
   return $templates;
 }
 
+// new listTemplates function, with minimal release (quality) threshold
+function listTemplates_release($releaseThresh='beta',$friendlyNames = FALSE) {
+  $releaseCodes = array('alpha'=>0,'beta'=>1,'stable'=>3,'final'=>4,'hidden'=>-1);
+  $minRelease = isset($releaseCodes[$releaseThresh]) ? $releaseCodes[$releaseThresh] : 1;
+  $scriptfile = str_replace('\\','/',__FILE__);
+  $sbaFolder = str_replace('/lib/sba_viewer.php','',$scriptfile);
+  $templates = array();
+  if (is_dir($sbaFolder)) {
+		if ($dh = opendir($sbaFolder)) {
+			while (($template = readdir($dh)) !== false) {
+			  $fullTemplate = $sbaFolder.'/'.$template;
+				if (is_dir($fullTemplate) && is_file($fullTemplate.'/template/config.json')) {
+          $config = json_decode(file_get_contents($fullTemplate.'/template/config.json'),true);
+          if ($config) {
+            $release = isset($config['release']) ? $config['release'] : 'beta';
+            $releaseCode = isset($releaseCodes[$release]) ? $releaseCodes[$release] : 1;
+            if ($releaseCode>=$minRelease) {
+              if ($friendlyNames) {
+                $v = $config['species'].' - '.$template.' ('.$config['templateName'].')';
+                $templates[$template] = $v;
+              } else {
+                $templates[] = $template;
+              }
+            }
+          }
+				}
+			}
+			closedir($dh);
+		}
+  }
+  return $templates;
+}
+
 function addChildren($acr,$acrChildren,$level=0, &$acrList=0) {
   if (!$level>10) return;
   if ($level==0) $acrList = array($acr=>1);
@@ -57,19 +90,25 @@ function findAcrForGivenRegion($region,$rgb2acr,$acr2parent,$alias2acr=undefined
   $validAcronyms = array_merge(array_values($rgb2acr),array_values($acr2parent));
   // first try case-sensitive match
   $acr2acr = array_combine($validAcronyms,$validAcronyms);
-  $acr = $acr2acr[$region];
-  if (!isset($acr)) {
+  $acr = NULL;
+  if (isset($acr2acr[$region])) {
+    $acr = $acr2acr[$region];
+  } else {
     // then check alias-acronyms
     $alias = $region;
-    $acr = $alias2acr[$alias];
-    if (!isset($acr)) {
+    if (isset($alias2acr[$alias])) {
+      $acr = $alias2acr[$alias];
+    } else {
       // then check case-insensitive match
       $acr_lc2acr = array_change_key_case($acr2acr,CASE_LOWER);
-      $acr = $acr_lc2acr[strtolower($region)];
-      if (!isset($acr) && isset($alias2acr)) {
+      $region_lc = strtolower($region);
+      if (isset($acr_lc2acr[$region_lc])) {
+        $acr = $acr_lc2acr[$region_lc];
+      } elseif (isset($alias2acr)) {
         // finally check case-insensitive alias-acronyms
         $alias_lc2acr = array_change_key_case($alias2acr,CASE_LOWER);
-        $acr = $alias_lc2acr[strtolower($alias)];
+        $alias_lc = strtolower($alias);
+        if (isset($alias_lc2acr[$alias_lc])) $acr = $alias_lc2acr[$alias_lc];
       }
     }
   }
@@ -93,8 +132,10 @@ function getRgbList($acr,$rgb2acr,$acr2parent,$acr2rgb=null) {
 function getMiddleSlice($rgbList,$brainRegions,$brainSlices) {
   $slices = array();
   foreach ($rgbList as $r) {
-    $sData = $brainRegions[$r];
-    if (isset($sData)) foreach ($sData as $s=>$dummy) { $slices[$s] = 1; }
+    if (isset($brainRegions[$r])) {
+      $sData = $brainRegions[$r];
+      foreach ($sData as $s=>$dummy) { $slices[$s] = 1; }
+    }
   }
   // if none of the slices shows the structure, then return the middle slice of all slices
   if (count($slices)) $slices = array_keys($slices);
@@ -213,7 +254,7 @@ function generateSvg2d($s0,$rgbSelect,$brainSlices,$svgPaths,$size,$config=array
     $scaleBy = ($size == 'S' ? 0.5 : 0.75)/3;
     $shapeRendering = 'geometricPrecision';
   }
-  $bb = isset($config['boundingBox']) ? $config['boundingBox'] : array(0,0,8268,11693);
+  $bb = $config['boundingBox'];
   $imgWidth = $imgHeight*($bb[2]/$bb[3]);
   $strokeWidth = 0.003*$bb[2];
   $a = '<svg class="slice2d" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" preserveAspectRatio="none" style="shape-rendering:'.$shapeRendering.'; text-rendering:geometricPrecision; fill-rule:evenodd" width="'.round($imgWidth*$scaleBy).'px" height="'.round($imgHeight*$scaleBy).'px" viewBox="'.implode(' ',$bb).'">';
@@ -319,5 +360,49 @@ function mm2svg($xMm,$yMm,$config) {
   $yCoordFrac = 1-$yCoordFrac;
   $cf = $config['sliceCoordFrame'];
   return array($cf[0]+$xCoordFrac*$cf[2],$cf[1]+$yCoordFrac*$cf[3]);
+}
+
+function rgbslice($template,$s0,$size,$nocache=FALSE) {
+  // update cached image, if necessary
+  $thumbnail_name = $template.'_slice'.($s0+1).$size;
+  $scriptfolder = __DIR__;  
+  $svgfile = str_replace('lib','cache/'.$thumbnail_name.'.svg',$scriptfolder);
+  $pngfile = str_replace('.svg','.png',$svgfile);
+  $lastmodified_cache = @filemtime($pngfile);
+  $lastmodified_script = @filemtime($scriptfile);
+  if (!$lastmodified_cache || $lastmodified_cache < $lastmodified_script || $nocache) {
+    $templateRoot = '../'.$template.'/';
+
+    $SVG_PATHS = json_decode(file_get_contents($templateRoot.'template/svgpaths.json'),true);
+    $BRAIN_SLICES = json_decode(file_get_contents($templateRoot.'template/brainslices.json'),true);
+    $CONFIG = json_decode(file_get_contents($templateRoot.'template/config.json'),true);
+
+    // generate svg
+    try {
+      $svg = @generateSvg2d($s0,'RGB',$BRAIN_SLICES,$SVG_PATHS,$size,$CONFIG);
+    } catch(Exception $e) {
+      echo 'Error: '.$e->getMessage()."\n";
+      return;
+    }
+
+    // save svg to cache
+    file_put_contents($svgfile,$svg);
+
+    if (0) {
+      // Problem with this API: can't turn off anti-aliasing, even though SVG has shape-rendering: crispEdges
+      // load svg into Imagick
+      $im = new Imagick($svgfile);
+
+      // save svg as png
+      $im->setImageColorSpace(imagick::COLORSPACE_RGB);
+      $im->setImageDepth(8);
+      $im->setImageRenderingIntent(imagick::RENDERINGINTENT_ABSOLUTE);
+      $im->setImageCompressionQuality(100);
+      $im->writeImage($pngfile);
+      $im->destroy();
+    }
+    exec('convert +antialias "'.$svgfile.'" "'.$pngfile.'"');
+  }
+  return $pngfile;
 }
 ?>

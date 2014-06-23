@@ -6,6 +6,6 @@ $jsonfile = $_REQUEST['jsonfile'];
 
 $jsonfile = '../'.$template.'/template/'.$jsonfile.'.json';
 header('Content-type: application/json; charset=utf-8');
-if (file_exists($jsonfile)) readfile($jsonfile); 
+if (file_exists($jsonfile)) readfile($jsonfile);
 else echo 'null';
 ?>

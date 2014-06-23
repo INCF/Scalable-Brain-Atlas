@@ -38,7 +38,7 @@ acronyms = rgb2acr(:,2);
 rgbdec2indx = sparse(rgbdec1,ones(size(rgbdec1)),1:numel(rgbdec1));
 
 % get start and end slice for the specified region
-[baseUrl 'mfiles/get_region_slicerange.php']
+[baseUrl 'mfiles/get_region_slicerange.php'];
 tmp = urlread([baseUrl 'mfiles/get_region_slicerange.php'],'get',{'template',template,'region',region});
 sliceRange = eval(char(tmp))
 
@@ -67,8 +67,18 @@ for s=sliceRange(1):sliceRange(2),
       tmp(find(tmp == rgbIndx)) = max_uint16;
     end
   else
-    map2dec = 256*256*uint32(255*map(:,1))+256*uint32(255*map(:,2))+uint32(255*map(:,3))
-    % CONTINUE HERE
+    map2dec1 = 256*256*uint32(255*map(:,1))+256*uint32(255*map(:,2))+uint32(255*map(:,3))+1;
+    % set all voxels that are part of the specified region to max_uint16
+    tmp = uint16(tmp);
+    for r=1:size(rgbList,1),
+      rgbdec1 = hex2dec(rgbList(r,:))+1;
+      idx = find(map2dec1==rgbdec1)-1;
+      if isempty(idx),
+        warning(['Slice ' num2str(s) ' contains no voxels for region ' acronyms{rgbdec2indx(rgbdec1)}]);
+      else
+        tmp(find(tmp == idx)) = max_uint16;
+      end
+    end
   end
   % set all other voxels to 0
   tmp(find(tmp ~= max_uint16)) = 0;

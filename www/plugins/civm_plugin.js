@@ -41,17 +41,34 @@ civmPlugin_class.prototype.activate = function(sbaViewer,divElem) {
     "username": "civmpub",
     "password": "civmpub"
   };
-  this.login("https://civmvoxport.duhs.duke.edu/voxbase/login.php?return_url=%2Fvoxbase%2Fstudyhome.php%3Fstudyid%3D132",args,browser.documentBody());
-  this.applyStateChange(sbaViewer,divElem);
+  
+  if (sbaViewer.template == 'CBWJ13_age_P80') {
+    var studyid = 208;
+    var return_url = '%2Fvoxbase%2Fstudyhome.php%3Fstudyid%3D214%26supplement_redirect%3D208';
+    var datasets = {
+      "11953":"GRE"
+    }
+  } else {
+    var studyid = 132;
+    var return_url = '%2Fvoxbase%2Fstudyhome.php%3Fstudyid%3D132';
+    var datasets = {
+      "8960":"MRI-T1",
+      "8962":"MRI-T2",
+      "8961":"MRI-T2*",
+      "10622":"Nissl stain"
+    }
+  }
+  this.login('https://civmvoxport.duhs.duke.edu/voxbase/login.php?return_url='+return_url,args,browser.documentBody());
+  var a = [];
+  a.push('The overlay images on the Scalable Brain Atlas are compressed.');
+  a.push('<br/>Full resolution images are available at the<br/>Duke Center for In Vivo Microscopy (CIVM).');
+  a.push('<br/>Download NIFTI files from the <a href="http://civmvoxport.duhs.duke.edu/voxbase/studyhome.php?studyid=132">overview page</a>,<br/>or view the data directly:');
+  
+  for (var k in datasets) {
+    a.push('<br/><a target="CIVM_VIEWER" href="http://civmvoxport.duhs.duke.edu/voxbase/preview.php?tid=B&amp;studyid='+studyid+'&amp;datasetid='+k+'">'+datasets[k]+'</a> (opens new/existing window)');
+  }
+  divElem.innerHTML = a.join('\n');
 }
 
 civmPlugin_class.prototype.applyStateChange = function(sbaViewer,divElem) {
-  var a = [];
-  a.push('The overlay images on the Scalable Brain Atlas are highly compressed.');
-  a.push('<br/>Full resolution images are available at the<br/>Duke Center for In Vivo Microscopy (CIVM): ');
-  a.push('<br/><a target="CIVM_VIEWER" href="http://civmvoxport.duhs.duke.edu/voxbase/preview.php?tid=B&amp;studyid=132&amp;datasetid=8960">MRI-T1</a> (opens new/existing window)');
-  a.push('<br/><a target="CIVM_VIEWER" href="http://civmvoxport.duhs.duke.edu/voxbase/preview.php?tid=B&amp;studyid=132&amp;datasetid=8962">MRI-T2</a> (opens new/existing window)');
-  a.push('<br/><a target="CIVM_VIEWER" href="http://civmvoxport.duhs.duke.edu/voxbase/preview.php?tid=B&amp;studyid=132&amp;datasetid=8961">MRI-T2*</a> (opens new/existing window)');
-  a.push('<br/><a target="CIVM_VIEWER" href="http://civmvoxport.duhs.duke.edu/voxbase/preview.php?tid=B&amp;studyid=132&amp;datasetid=10622">Nissl stain</a> (opens new/existing window)');
-  divElem.innerHTML = a.join('\n');
 }

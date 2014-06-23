@@ -9,6 +9,7 @@ $info = json_decode(
 SITEMAP
 ,TRUE);
 
+ini_set('display_errors',1);
 require_once('../shared-lib/sitemap.php');
 require_once('../shared-lib/applet.php');
 $siteMap = new siteMap_class($info);
@@ -23,17 +24,17 @@ $applet->addFormField('template',$f);
 $comment = 'Enter coordinates as a comma separated list [x,y,z]. The origin and direction of x, y and z depend on the atlas template, but in all cases x refers to the left/right axis, y to the posterior/anterior axis and z to the inferior/superior axis.';
 $applet->addFormField('comment',new commentField_class($comment));
 $applet->addFormField('coord',new textField_class('Coordinate',$attrs,3,40));
-$applet->addFormField('output',new selectField_class('Image format',NULL,array('json'=>'json','html'=>'html'),'json'));
+$applet->addFormField('output',new selectField_class('Image format',NULL,array('json'=>'json'),'json'));
 
 $errors = $applet->parseAndValidateInputs($_REQUEST);
-$template = $_REQUEST['template'];
-$runLevel = $applet->runLevel($_REQUEST['run'],$template);
+$template = @$_REQUEST['template'];
 
-if ($runLevel == 0) {
+if (!$template) {
 	/*
 	 * Interactive mode
 	 */
 	echo '<html><head>';
+  echo '<meta http-equiv="content-type" content="text/html; charset=UTF-8">';
 	echo '<script type="text/javascript" src="../shared-js/browser.js"></script>';
 	echo $siteMap->windowTitle();
 	echo $siteMap->clientScript();
@@ -74,105 +75,113 @@ $z = $xyz[2];
 
 // find the slice closest to the slicePos specified in Y
 $slicePos = @json_decode(file_get_contents($jsonPath.'slicepos.json'),true);
+
+/*
 // . get the number of slices (quick: from bregma; slow: from brainslices)
 $numSlices = count($slicePos);
+*/
 
 $config = @json_decode(file_get_contents($jsonPath.'config.json'),true);
 if (!isset($config)) $config = array();
+/*
 // . get the slice range (sliceStart, sliceEnd, sliceStep)
 $sliceRange = $config['sliceRange'];
 if (!isset($sliceRange)) $sliceRange = array(1,$numSlices,1);
 if (!isset($sliceRange[2])) $sliceRange[2] = 1;
 $indx2slice = range($sliceRange[0],$sliceRange[1],$sliceRange[2]);
+*/
 
 // . find index with smallest difference between y and slicePos
-$dSelect = NULL;
-foreach ($slicePos as $i=>$b) {
-  $d = abs($y-$b);
-  if (isset($dSelect) && $d>$dSelect) break; 
-  $dSelect = $d;
-  $iSelect = $i;
-}  
-$s1 = $iSelect+1;
-$posSelect = $slicePos[$iSelect];
+$s0 = NULL;
+$rgb = NULL;
+$acr = '[error]';
 
-CALL RGBSLICE FOR THE CACHED FILE NAME.
-LOAD THAT FILE
-AND USE X AND Z TO COMPUTE COORDS
+$sortPos = $slicePos;
+sort($sortPos);
+$end = count($sortPos)-1;
+$yMin = $sortPos[0]-0.5*($sortPos[1]-$sortPos[0]);
+$yMax = $sortPos[$end]+0.5*($sortPos[$end]-$sortPos[$end-1]);
 
-// update cached image, if necessary
-$scriptfile = $_SERVER['SCRIPT_FILENAME'];
-$size = 'L';
-$thumbnail_name = $template.'_slice'.$slice.$size;
-$svgfile = str_replace('services/coord2region.php','cache/'.$thumbnail_name.'.svg',$scriptfile);
-$pngfile = str_replace('.svg','.png',$svgfile);
-$lastmodified_cache = @filemtime($pngfile);
-$lastmodified_script = @filemtime($scriptfile);
-if (!isset($lastmodified_cache) || $lastmodified_cache < $lastmodified_script) {
-  $SVG_PATHS = json_decode(file_get_contents($jsonPath.'svgpaths.json'),true);
-  $BRAIN_SLICES = json_decode(file_get_contents($jsonPath.'brainslices.json'),true);
-  
-  // generate svg
-  $svg = generateSvg2d($slice,'RGB',$BRAIN_SLICES,$SVG_PATHS,$size);
-  
-  // save svg to cache
-  file_put_contents($svgfile,$svg);
-
-  if (0) {
-    // Problem with this API: can't turn off anti-aliasing, even though SVG has shape-rendering: crispEdges
-    // load svg into Imagick
-    $im = new Imagick($svgfile);
-
-    // save svg as png
-    $im->setImageColorSpace(imagick::COLORSPACE_RGB);
-    $im->setImageDepth(8);
-    $im->setImageRenderingIntent(imagick::RENDERINGINTENT_ABSOLUTE);
-    $im->setImageCompressionQuality(100);
-    $im->writeImage($pngfile);
-    $im->destroy(); 
-  }
-  exec('convert -colorspace RGB -depth 8 -type TrueColor +antialias '.$svgfile.' '.$pngfile);
-}
-
-$im = new Imagick($pngfile);
-$imgHeight = $im->getImageHeight();
-
-// convert the stereotaxic XY coordinates to SVG coordinates
-$xyScaling = @json_decode(file_get_contents($template.'/template/xyscaling.json'),true);
-if (!isset($xyScaling)) $xyScaling = array(0,1,0,1);
-if (is_array(current($xyScaling))) $s = $xyScaling[$slice];
-else $s = $xyScaling;
-$xPt = ($x-$s[0])/$s[1];
-$yPt = ($y-$s[2])/$s[3];
-// convert SVG coordinates to pixel coordinates
-$bb = $config['boundingBox'];
-if (!isset($bb)) $bb = array(0,0,8268,11693);
-$xPx = ($xPt-$bb[0])*$imgHeight/$bb[3];
-$yPx = ($yPt-$bb[1])*$imgHeight/$bb[3];
-
-// read rgb value at pixel coordinate
-$rgb = $im->getImagePixelColor($xPx,$yPx);
-$rgb = $rgb->getColor();
-$rgb = sprintf('%02X%02X%02X',$rgb['r'],$rgb['g'],$rgb['b']);
-$RGB_TO_ACR = json_decode(file_get_contents($template.'/template/rgb2acr.json'),true);
-$ACR_TO_FULL = json_decode(file_get_contents($template.'/template/acr2full.json'),true);
-$acr = $RGB_TO_ACR[$rgb];
-if (isset($acr)) {
-  $full = $ACR_TO_FULL[$acr];
+if ($y<$yMin || $y>$yMax) {
+  $full = 'Y out of limits ['.$yMin.','.$yMax.']';
 } else {
-  $acr = $full = '[unknown]';
+  $bb = $config['boundingBox'];
+  $xz1 = svg2mm($bb[0],$bb[1],$config);
+  $xz2 = svg2mm($bb[0]+$bb[2],$bb[1]+$bb[3],$config);
+  $xMin = min($xz1[0],$xz2[0]);
+  $xMax = max($xz1[0],$xz2[0]);
+  $zMin = min($xz1[1],$xz2[1]);
+  $zMax = max($xz1[1],$xz2[1]);
+  if ($x<$xMin || $x>$xMax) {
+    $full = 'X out of limits ['.fixDecimals($xMin,4).','.fixDecimals($xMax,4).']';
+  } elseif ($z<$zMin || $z>$zMax) {
+    $full = 'Z out of limits ['.fixDecimals($zMin,4).','.fixDecimals($zMax,4).']';
+  } else {
+    $dSelect = NULL;
+    foreach ($slicePos as $i=>$b) {
+      $d = abs($y-$b);
+      if (isset($dSelect) && $d>$dSelect) break; 
+      $dSelect = $d;
+      $iSelect = $i;
+    }
+    $s0 = $iSelect;
+    $posSelect = $slicePos[$iSelect];
+
+    $pngfile = rgbslice($template,$s0,'L',FALSE);
+    $useIM = class_exists('Imagick');
+    if ($useIM) {
+      $im = new Imagick($pngfile);
+      $imgWidth = $im->getImageWidth();
+      $imgHeight = $im->getImageHeight();
+    } else {
+      $im = imagecreatefrompng($pngfile);
+      $imgWidth = imagesx($im);
+      $imgHeight = imagesy($im);
+    }
+
+    // convert the stereotaxic XY coordinates to SVG coordinates
+    $xzSvg = mm2svg($x,$z,$config);
+
+    // convert SVG coordinates to pixel coordinates
+    $xPx = ($xzSvg[0]-$bb[0])*$imgHeight/$bb[3];
+    $zPx = $imgHeight *(($xzSvg[1]-$bb[1])/$bb[3]);
+
+    // read rgb value at pixel coordinate
+    if ($useIM) {
+      $idx = $im->getImagePixelColor($xPx,$zPx);
+      $rgb = $idx->getColor();
+      $rgb = sprintf('%02X%02X%02X',$rgb['r'],$rgb['g'],$rgb['b']);
+    } else {
+      $idx = imagecolorat($im,$xPx,$zPx);
+      $rgb = @imagecolorsforindex($im,$idx);
+      $rgb = sprintf('%02X%02X%02X',$rgb['red'],$rgb['green'],$rgb['blue']);
+    }
+
+    if (!isset($idx)) {
+      $full = 'Error in imagecolorat()';
+    } else {
+      $RGB_TO_ACR = json_decode(file_get_contents($jsonPath.'/rgb2acr.json'),true);
+      $ACR_TO_FULL = json_decode(file_get_contents($jsonPath.'/acr2full.json'),true);
+      $acr = @$RGB_TO_ACR[$rgb];
+      if (isset($acr)) {
+        $full = $ACR_TO_FULL[$acr];
+      } else {
+        $acr = '[error]';
+        $full = '[Found no acronym for RGB '.$rgb.']';
+      }
+    }
+  }
 }
-$ans['region'] = $template.'-'.$acr;
+$ans['template'] = $template;
+$ans['region'] = $acr;
 $ans['fullName'] = $full;
 $ans['rgb'] = $rgb;
-$ans['stereotaxicCoord'] = array($x,$y,$z);
-$ans['selectedSlice'] = $slice;
-if (isset($bregmaSelect)) $ans['selectedBregma'] = $bregmaSelect;
+$ans['xyz'] = array($x,$y,$z);
+$ans['sbaSlice'] = $s0+1;
 
 if ($outputType == 'json') {
-  echo json_encode($ans);
-} elseif ($outputType == 'html') {
-  require_once('lib/json_html.php');
-  echo json_html($ans);
+  require_once('../shared-lib/formatAs.php');
+  echo formatAs_jsonHeaders();
+  echo formatAs_prettyJson($ans);
 }
 ?>

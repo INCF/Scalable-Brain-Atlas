@@ -21,15 +21,15 @@ require_once('../lib/sba_viewer.php');
 $f->setChoices(listTemplates('friendlyNames'),NULL);
 $applet->addFormField('template',$f);
 
-$template = $_REQUEST['template'];
-$errors = $applet->parseAndValidateInputs($_REQUEST);
-$runLevel = $applet->runLevel($_REQUEST['run'],$template);
+list($inputs,$errors) = $applet->validateInputs($_REQUEST);
+$template = $inputs['template'];
 
-if ($runLevel == 0) {
+if (!isset($_REQUEST['template'])) {
 	/*
 	 * Interactive mode
 	 */
 	echo '<html><head>';
+  echo '<meta http-equiv="content-type" content="text/html; charset=UTF-8">';
 	echo '<script type="text/javascript" src="../shared-js/browser.js"></script>';
 	echo $siteMap->windowTitle();
 	echo $siteMap->clientScript();
@@ -79,14 +79,14 @@ $acr2rgb = array_flip($rgb2acr);
 // fill acr2shape, first pass
 $acr2shape = array();
 foreach($acr2full as $acr=>$full) {
-	$rgb = $acr2rgb[$acr];
-	$acr2shape[$acr] = isset($brainregions[$rgb]) ? 'P' : 'U';    
+	$rgb = isset($acr2rgb[$acr]) ? $acr2rgb[$acr] : '';
+  $acr2shape[$acr] = isset($brainregions[$rgb]) ? 'P' : 'U';
 }
 // sort acr2shape such that children appear before their parents
 if (isset($acr2parent)) {
 	foreach($acr2full as $acr=>$full) {
-		$parent = $acr2parent[$acr];
-		if (isset($parent)) {
+		if (isset($acr2parent[$acr])) {
+      $parent = $acr2parent[$acr];
 			$parentShape = $acr2shape[$parent];
 			unset($acr2shape[$parent]);
 			$acr2shape[$parent] = $parentShape;
@@ -95,11 +95,13 @@ if (isset($acr2parent)) {
 }
 // fill acr2shape, use 'C' for regions with children
 foreach($acr2shape as $acr=>$shape) {
-	$parent = $acr2parent[$acr];
-	$parentShape = $acr2shape[$parent];
-	if ($shape != 'U' && $parentShape == 'U') {
-		$acr2shape[$parent] = 'C';
-	}
+  if (isset($acr2parent[$acr])) {
+	  $parent = $acr2parent[$acr];
+	  $parentShape = $acr2shape[$parent];
+	  if ($shape != 'U' && $parentShape == 'U') {
+		  $acr2shape[$parent] = 'C';
+	  }
+  }
 }
 // check if each rgb has an entry in $acr2full
 foreach($brainregions as $rgb=>$x) {
@@ -111,11 +113,11 @@ foreach($brainregions as $rgb=>$x) {
 // list the regions
 header('Content-type: text/plain');
 foreach($acr2full as $acr=>$full) {
-	$rgb = $acr2rgb[$acr];
+	$rgb = isset($acr2rgb[$acr]) ? $acr2rgb[$acr] : '';
 	echo '#'.$rgb."\t".$acr;
 	$full = $acr2full[$acr];
 	echo "\t".$full;
-	$parent = $acr2parent[$acr];
+	$parent = isset($acr2parent[$acr]) ? $acr2parent[$acr] : '';
 	echo "\t".$parent;
 	$shape = $acr2shape[$acr];    
 	echo "\t".$shape;

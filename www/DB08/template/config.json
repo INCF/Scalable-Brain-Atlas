@@ -1,0 +1,34 @@
+{
+"version": 2,
+"species":"Macaque",
+"ncbiName":"Macaca mulatta",
+"ncbiId":"9544",
+"nlxName":"Rhesus monkey",
+"nlxId":"Birnlex_103",
+"strain":"",
+"templateName":"NeuroMaps Atlas",
+"hemisphere":"L",
+"boundingBox":[0,0,5648,10000],
+"whiteMatterAcronyms":["cw"],
+"sliceUnits":["mm","mm"],
+"sliceXLim":[-38.475,-0.075],
+"sliceYLim":[-38.475,38.325],
+"sliceCoordSystem":"RAS",
+"rasLimits":[
+  [-38.475,-0.075],
+  [-44.925,31.875],
+  [-38.475,38.325]
+],
+"sliceCoordFrame":[-1746.0106,-2495.443,7295.9347,14591.8695],
+"overlays": {
+  "MRI": {"source": "coronal_mri/mri_%03d.jpg"},
+  "MRI+": {"source": "coronal_mri/mri_%03d.jpg","colorMap": "jet"},
+  "labels": {"source": "coronal_labels/atlas_%03d.png"}
+},
+"slicePositionUnit":"mm ant. ac",
+"slicePositionDescription":"posterior(-) or anterior(+) distance to center of anterior commissure",
+"sliceRange":[491,6,-3],
+"hierarchyOrphanParent": "[not in hierarchy]",
+"whiteMatterAcronyms":["cw"],
+"plugins":["BrainInfo","wikipedia","bar3d"]
+}

@@ -18,18 +18,18 @@ require_once('../lib/sba_viewer.php');
 $siteMap = new siteMap_class($info);
 $applet = new applet_class('get');
 $f = new selectField_class('Atlas template');
-$f->setChoices(listTemplates('friendlyNames'),NULL);
+$f->setChoices(listTemplates_release('alpha',TRUE),NULL);
 $applet->addFormField('template',$f);
 
-$errors = $applet->parseAndValidateInputs($_REQUEST);
-$template = $_REQUEST['template'];
-$runLevel = $applet->runLevel(@$_REQUEST['run'],$template);
+list($inputs,$errors) = $applet->validateInputs($_REQUEST);
+$template = @$inputs['template'];
 
-if ($runLevel == 0 || count($errors)) {
+if (!$template || count($errors)) {
   /*
    * Interactive mode
    */
   echo '<html><head>';
+  echo '<meta http-equiv="content-type" content="text/html; charset=UTF-8">';
   echo '<script type="text/javascript" src="../shared-js/browser.js"></script>';
   echo $siteMap->windowTitle();
   echo $siteMap->clientScript();
@@ -41,7 +41,7 @@ if ($runLevel == 0 || count($errors)) {
   echo '<p>';
   echo $applet->standardFormHtml('Start atlas viewer','_top',$_REQUEST);  
   if (count($errors) && isset($template)) echo $applet->errorReport($errors);
-  echo '</body></html>';
+  echo '</p></body></html>';
   exit;
 }
 
@@ -62,6 +62,8 @@ $config['width3d'] = $config['width3d']['main'][0];
 $config['width2d'] = array($config['width2d']['main'][1],$config['width2d']['main'][2]);
 $fname = '../'.$template.'/3dbar_overlay.png';
 $config['overlay3d'] = file_exists($fname);
+$fname = '../'.$template.'/mid_saggital.jpg';
+$config['saggital3d'] = file_exists($fname);
 
 $info['title'] = 'Scalable Brain Atlas - '.@$config['templateName'];
 $info['path'] = str_replace('coronal3d',$template,$info['path']);
@@ -103,6 +105,7 @@ echo $siteMap->clientScript();
     <style id="svg_style" type="text/css">
     <![CDATA[
     path { opacity: 1; fill: #606055; stroke: #FFF; stroke-width: 0.4in; }
+    path.onwhite { stroke: #0F0 }
     path.wm { fill-opacity: 0.7; fill: #998; }
     path.gm { fill-opacity: 0.7; fill: #202530; }
     path.marker { opacity: 1; stroke: #000; stroke-width: 0.2in; }
@@ -132,8 +135,8 @@ ul.sba {
   margin: 0px;
   list-style-type: none;
 }
-li.sba {
-  padding-bottom: 3px;
+ul.sba li {
+  padding-bottom: 4px;
 }
 span.emph,a.emph {
   color: #510;
@@ -173,7 +176,7 @@ input.overlay-on {
   background-color: #FFF;
 }
 div.view-panel {
-  background: #EDA; 
+<?php echo 'background: #'.(isset($_REQUEST['skin']) ? preg_replace('/[^\d\w]+/','',$_REQUEST['skin']) : 'EDA').';'; ?>
   padding: 12px; 
   border: 2px solid #999;
   -moz-border-radius: 12px;
@@ -233,19 +236,13 @@ div.inlineBlue {
   color: #006;
   display: inline-block;
 }
-<!--[if lt IE 8]>
-  div.inlineBlue {
-    zoom: 1;
-    *display: inline;
-  }
-<![endif]-->
-
-/*
-div.regions-content {
-  padding-left: 2ex;
-  text-indent: -2ex;
+#licenceAccept {
+  text-align: center;
+  padding: 40px;
+  border: 5px solid #00A;
+  -moz-border-radius: 20px;
+  border-radius: 20px;
 }
-*/
 </style>
 <link rel="stylesheet" type="text/css" href="../css/myPage.css"/>
 <link rel="stylesheet" type="text/css" href="../css/myForms.css"/>
@@ -260,7 +257,16 @@ browser.include_script_once("../js/errorConsole.js");
 <script type="text/javascript" src="../js/tooltip.js"></script>
 <script type="text/javascript" src="../js/myMenu.js"></script>
 <script type="text/javascript" src="../js/myTree.js"></script>
-<script type="text/javascript" src="../js/jsonRequest.js"></script>
+<script type="text/javascript" src="../shared-js/jsonRequest.js"></script>
+<script type="text/javascript">
+jsonRPC_class.prototype.serverError = function(msg) {
+  if (typeof msg == 'object') {
+    globalErrorConsole.addError(json_encode(msg));
+  } else {
+    globalErrorConsole.addError(msg);
+  }
+}
+</script>
 <script type="text/javascript" src="../js/sba_regiontree.js"></script>
 <script type="text/javascript" src="../js/sba_viewer.js"></script>
 <script type="text/javascript" src="../js/sba_plugins.js"></script>
@@ -273,9 +279,11 @@ browser.include_script_once("../js/errorConsole.js");
 //}
 
 // deal with featured overlay
-$featuredOverlay = $_REQUEST['overlay'];
-if (isset($featuredOverlay) && isset($config['overlays'][$featuredOverlay])) {
-  $config['featuredOverlay'] = $featuredOverlay;
+if (isset($_REQUEST['underlay2d'])) {
+  $featuredOverlay = $_REQUEST['underlay2d'];
+  if (isset($config['overlays'][$featuredOverlay])) {
+    $config['featuredOverlay'] = $featuredOverlay;
+  }
 }
 
 // deal with featured/external plugin
@@ -304,8 +312,16 @@ $plugins = $config['plugins'];
 if (isset($plugins)) {
   $ep = substr($externalPlugin,1);
   foreach ($plugins as $pn) {
-    if ($pn != $ep && file_exists('../plugins/'.strtolower($pn).'_plugin.js')) {
-      echo '<script type="text/javascript" src="../plugins/'.strtolower($pn).'_plugin.js"></script>';
+    if ($pn != $ep) {
+      $pluginScript = '../plugins/'.strtolower($pn).'_plugin.js';
+      if (file_exists($pluginScript)) {
+        echo '<script type="text/javascript" src="'.$pluginScript.'"></script>';    
+      } else {
+        $pluginScript = '../plugins/'.strtolower($pn).'_plugin.php';
+        if (file_exists($pluginScript)) {
+          echo '<script type="text/javascript" src="'.$pluginScript.'"></script>';    
+        }
+      }
     }
   }
 }
@@ -329,6 +345,7 @@ if (!isset($acr) && isset($region)) {
 
   // get acr from region
   $acr = findAcrForGivenRegion($region,$rgb2acr,$acr2parent,$alias2acr);
+  
   // get rgb list
   $rgbList = getRgbList($acr,$rgb2acr,$acr2parent,$acr2rgb);
   if (!isset($slice)) {
@@ -359,9 +376,8 @@ echo 'var ACR_TO_FULL='.json_encode($acr2full).";\n";
 echo 'var ACR_TO_PARENT='.json_encode($acr2parent).";\n";
 echo 'var ALIAS_TO_ACR='.json_encode($alias2acr).";\n";
 echo 'var HULLS='.fileContents($jsonPath.'hulls.json').";\n";
-echo 'var REGION_CENTERS='.fileContents($jsonPath.'regioncenters.json').";\n";
-echo 'SLICE_POS='.fileContents($jsonPath.'slicepos.json').";\n";
-echo 'ORIGSLICE_POS='.fileContents($jsonPath.'origslicepos.json').";\n";
+echo 'var SLICE_POS='.fileContents($jsonPath.'slicepos.json').";\n";
+echo 'var ORIGSLICE_POS='.fileContents($jsonPath.'origslicepos.json').";\n";
 echo 'var CONFIG='.json_encode($config).";\n";
 echo 'var ACR_TO_NNID='.fileContents($jsonPath.'acr2nnid.json').";\n";
 /* deprecated
@@ -370,6 +386,11 @@ echo 'var ACR_TO_NLXID='.fileContents($jsonPath.'acr2nlxid.json').";\n";
 echo 'var RGB_CENTERS='.fileContents($jsonPath.'rgbcenters.json').";\n";
 echo 'var RGB_VOLUMES='.fileContents($jsonPath.'rgbvolumes.json').";\n";
 ?>;
+if (HULLS != undefined) {
+  for (var k in HULLS) {
+    if (typeof(HULLS[k]) == 'string') HULLS[k] = [HULLS[k]];
+  }
+}
 var BS_SUGGESTIONS = undefined;
 
 window.bodyOnchange = function(query) {
@@ -447,7 +468,9 @@ echo $siteMap->navigationBar();
 
 $templateName = @$config['templateName'];
 if (isset($templateName)) {
-  echo '<h2 style="margin-bottom:0px">'.$config['species'].' - '.$templateName.'</h2>';
+  echo '<table><tr><td rowspan="2" style="padding-right:3px"><a href="#about"><img src="../img/info.png"/></a></td><td>';
+  if (@$config['release']=='alpha') echo '<div style="background: #A00; color: #FFF; padding:2px"><i>This template is under construction and may change or disappear without notice</i></div>';
+  echo '<h2 style="margin-bottom:0px">'.$config['species'].' - '.$templateName.'</h2></td></tr><tr><td>';
   $nlxId = @$config['nlxId'];
   if ($nlxId) {
     echo ' '.$config['nlxName'].' (<a href="http://neurolex.org/wiki/'.$nlxId.'" target="_blank">Neurolex</a>)';
@@ -456,6 +479,12 @@ if (isset($templateName)) {
       echo ' | '.$config['ncbiName'].' (<a href="http://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id='.$ncbiId.'" target="_blank">NCBI</a>)';    
     }
   }
+  echo '</td></tr>';
+  if (isset($config['licenceHtml'])) {
+    $licenceHtml = $config['licenceHtml'];
+    echo '<tr><td colspan="2" id="licenceAccept">'.$licenceHtml.'<div style="margin-top: 40px"><input type="button" value="Hide" onclick="document.getElementById(\'licenceAccept\').style.display=\'none\'"/></div></td></tr>';
+  }
+  echo '</table>';
 }
 ?>
 <div style="position: absolute; top: 0px; left: <?php echo ($w_panel-100); ?>px; width: 100px; text-align: right"><a id="permalink" href="javascript:void(0)" onclick="sbaViewer.onClickPermaLink(event)">Permalink</a>
@@ -466,7 +495,7 @@ if (isset($templateName)) {
 <?php
 $fname = '../'.$template.'/3dbar_wholebrain.png';
 if (file_exists($fname)) {
-  echo '<img src="'.$fname.'"/>';
+  echo '<img '.($config['overlay3d'] ? 'height="120" ':'').'src="'.$fname.'"/>';
 }
 ?>
   <br/>
@@ -475,11 +504,21 @@ if (file_exists($fname)) {
   <br/>
   Rotate view:<br/>
   <button onclick="sbaViewer.prevAngle()"><img src="../img/rotback.gif" alt="back"/></button><input id="angle3d" type="text" size="3" onchange="sbaViewer.selectAngle(this.value)" onkeypress="if (navigator.appName=='Opera') if (browser.getKeyCode()==13) this.onchange()"/><button onclick="sbaViewer.nextAngle()"><img src="../img/rotforward.gif" alt="fwd"/></button>
-<?php if ($config['overlay3d']) { ?>
-<br/>
-3d brain overlay:<br/>
-<input type="button" value="Activate" onclick="sbaViewer.showOverlay3d(this,true)"/>
-<?php } ?>
+<?php 
+echo '<table>';
+if ($config['overlay3d']) { 
+  echo '<tr><td>3d overlay:</td><td><input type="button" value="Activate" onclick="sbaViewer.showOverlay3d(this)"/></td></tr>';
+} 
+if ($config['saggital3d']) { 
+  echo '<tr><td>Saggital slice:</td><td><input id="SBAVIEWER_SHOWSAGGITAL3D" type="button" value="Activate" onclick="sbaViewer.showSaggital3d(this)"/></td></tr>';
+} 
+if (@$config['hemisphere']) {
+  $L = strpos($config['hemisphere'],'L') !== FALSE;
+  $R = strpos($config['hemisphere'],'R') !== FALSE;
+  echo '<tr><td>Hemisphere:</td><td><select id="hemisphere3d" onchange="sbaViewer.selectClip3d(\'signX\',this.options[this.selectedIndex].value)">'.($L ? '<option value="1">Left</option>':'').($R ? '<option value="-1">Right</option>':'').($L&$R ? '<option value="0">Both</option>':'').'</select></td></tr>';
+}
+echo '</table>';
+?>
   </div>
   <div style="height: 64px">
     <div id="view3d_title" style="width: <?php echo $w_plugins ?>px; padding-left: 2ex; text-indent: -2ex">
@@ -545,12 +584,10 @@ echo '<iframe style="display: none" name="KEEPHISTORY" id="KEEPHISTORY" src="../
 echo '<iframe style="display: none" name="TEMPLATE" id="TEMPLATE" src="../php/template_container.php?template='.$template.'&amp;svgcapable='.$svgCapable.'"></iframe>';
 ?>
 <?php
-$creditsLinks = @file_get_contents('../'.$template.'/creditsLinks.snip');
-if (!$creditsLinks) $creditsLinks = @file_get_contents('../main/creditsLinks.snip');
-if ($creditsLinks) {
-  echo '<h3>Credits &amp; Links</h3>';
-  echo $creditsLinks;
-}
+$about = @file_get_contents('../'.$template.'/creditsLinks.snip');
+if (!$about) $about = '';
+$about .= file_get_contents('../main/creditsLinks.snip');
+echo '<p/><h2>About</h2><a name="about"/><ul class="sba">'.$about.'</ul>';
 
 // my ultra basic visitor counter
 require_once('../lib/mycounter.php');

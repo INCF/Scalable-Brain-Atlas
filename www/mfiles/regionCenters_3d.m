@@ -33,7 +33,7 @@ for pass=1:1000,
     r = lostRegions(i);
     ai = find(V_prev==r-1);
     aiSelect = ai(ceil(numel(ai)/2)); % middle value of ai
-    [ii,jj,kk] = ind2sub(size(V),aiSelect);    
+    [ii,jj,kk] = ind2sub(size(V),aiSelect);
     centers(r,:) = [ii jj kk]; % slice,left,top
   end
   if sum(regions)==1, break; end

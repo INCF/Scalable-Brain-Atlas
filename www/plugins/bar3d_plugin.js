@@ -62,8 +62,13 @@ bar3dPlugin_class.prototype.activate = function(sbaViewer,divElem) {
   acr = acr.trim();
   acr = acr.replace(/ /g,'-');
   var dataset = 'sba_' +this.template;
-  if (this.template=='ABA07') dataset = 'aba';
-  if (this.template=='WHS11') dataset = 'whs_0.6.1';
+  var template_lc = this.template.toLowerCase();
+  if (template_lc=='aba07') dataset = 'aba';
+  if (template_lc=='aba12') dataset = 'aba2011';
+  if (template_lc=='whs11') dataset = 'whs_0.6.1';
+  if (template_lc=='pwprt12') dataset = 'mbisc_11';
+  if (template_lc=='opsm14') dataset = 'pos_0.1';
+  if (template_lc=='cbwj13_age_p80') dataset = 'CBWJ13_P80';
   
   // Getting strings with links to reconstructions in various quality and live
   // preview 

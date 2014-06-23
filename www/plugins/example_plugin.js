@@ -19,7 +19,7 @@ examplePlugin_class.prototype = new sbaPlugin_class();
 // Called when plugin is shown for the first time
 examplePlugin_class.prototype.activate = function(sbaViewer,divElem) {
   var sbaState = sbaViewer.getState();
-  divElem.innerHTML = 'HELLO WORLD<p>'+json_encode(sbaState);
+  divElem.innerHTML = 'HELLO WORLD<pre>'+json_encode(sbaState)+'</pre>';
 }
 
 /*

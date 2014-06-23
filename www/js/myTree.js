@@ -106,7 +106,7 @@ baseNode_class.prototype.private_getNode = function(path,sep) {
 }
 
 baseNode_class.prototype.getNode = function(path,sep) {
-  if (sep == undefined) sep = '.';
+  if (sep == undefined) sep = '|';
   if (path == undefined) return undefined;
   if (path == '') return this;
   var ans = this.private_getNode(String(path),sep);
@@ -116,7 +116,7 @@ baseNode_class.prototype.getNode = function(path,sep) {
 
 baseNode_class.prototype.getPath = function(rootNode,sep) {
   if (rootNode == undefined) rootNode = this.getRoot();
-  if (sep == undefined) sep = '.';
+  if (sep == undefined) sep = '|';
   if (this == rootNode) return '';
   var me = this;
   var keys = [];
@@ -559,7 +559,7 @@ myFormTemplateNode_class.prototype.formInit = function(myForm,cmd) {
           field.update = function() {
             var sg = this.callback_suggestions; 
             var formData = myForm.getFieldValues();
-            var req = new phpRequest_class(sg.lib+'::'+sg.cmd,[sg.args,formData]);
+            var req = new phpRequest_class(sg.lib+'|'+sg.cmd,[sg.args,formData]);
             var thisField = this;
             req.responseHandler = function(ans) {
               if (typeof(ans) == 'object') {
@@ -598,9 +598,9 @@ myFormTemplateNode_class.prototype.formCallback = function(myForm,formData,cmd) 
     var cb = this.formButtons[cmd];
     var req;
     if (cb.method == 'phpRequest') {
-      req = new phpRequest_class(cb.lib+'::'+cb.cmd,args);
+      req = new phpRequest_class(cb.lib+'|'+cb.cmd,args);
     } else if (cb.method == 'phpSubmit') {
-      req = new phpSubmit_class(cb.lib+'::'+cb.cmd,args);
+      req = new phpSubmit_class(cb.lib+'|'+cb.cmd,args);
     } else throw('Unknown callback method "'+cb.method+'"');
     var me = this;
     req.responseHandler = function(ans) {
@@ -667,7 +667,7 @@ callbackNode_class.prototype = new node_class();
 callbackNode_class.prototype.toggle = function(context) {
   var method = this.attr.method;
   if (method=='phpRequest') {
-    var req = new phpRequest_class(this.attr.lib+'::'+this.attr.cmd,this.args,this.attr.responseType);
+    var req = new phpRequest_class(this.attr.lib+'|'+this.attr.cmd,this.args,this.attr.responseType);
     var me = this;
     req.responseHandler = function(ans) {
       var subTree = new myTree_class('subTree',ans);
@@ -868,7 +868,7 @@ myTree_class.prototype.refresh = function() {
 }
 
 myTree_class.prototype.openAt = function(contentPath,sep) {
-  if (sep == undefined) sep = '.';
+  if (sep == undefined) sep = '|';
   var parts = contentPath.split(sep);
   var nd = this.contentRoot;
   for (var i=0;i<parts.length;i++) {

@@ -1,4 +1,6 @@
-<html><head><script type="text/javascript">
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<script type="text/javascript">
 if (parent.bodyOnchange && parent.sbaViewer && !parent.sbaViewer.isLocked) {
   var query = window.location.search;
   if (query.length>1) {

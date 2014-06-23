@@ -7,7 +7,7 @@ function landmarksPlugin_class(name,sbaViewer) {
     'T2':[3,"#0DF",true],
     'T2*':[6,"#AF0",true]
   };
-  //this.niceName = 'Landmarks';
+  this.niceName = 'Landmarks';
   
 }
 landmarksPlugin_class.prototype = new sbaPlugin_class();
@@ -260,7 +260,7 @@ landmarksPlugin_class.prototype.activate = function(sbaViewer,divElem) {
     var md = this.modalities[m];
     var rgb = md[1];
     var show = md[2];
-    var button = '<input type="checkbox" onclick="sbaPluginManager.plugins[\''+this.name+'\'].updateMarkers(this,\''+m+'\')"'+(show ?  ' checked="checked"' : '')+'/>';
+    var button = '<input type="checkbox" onclick="sbaPluginManager.plugins[\''+this.name.toLowerCase()+'\'].updateMarkers(this,\''+m+'\')"'+(show ?  ' checked="checked"' : '')+'/>';
     ans += 'Show landmarks based on <b style="background:'+rgb+'">MRI-'+m+'</b> '+button+'<br/>';
   }
   for (var m in this.modalities) {
@@ -280,7 +280,7 @@ landmarksPlugin_class.prototype.activate = function(sbaViewer,divElem) {
         // third coord is 1-based posterior-anterior axis (original slice number)
         var xyz = this.xyzLandmark(hires,i0);
         var os = sbaViewer.nearestOrigSlice(xyz[1]);
-        ans += '<tr><td><a class="link" onclick="sbaViewer.selectOrigSlice('+os+')">'+k+'</a></td><td>'+full+'</td><td><a class="link" onclick="sbaViewer.selectOrigSlice('+os+');sbaPluginManager.plugins[\''+this.name+'\'].showDef(\''+k+'\',\''+m+'\')">def</a></td><td>'+xyz[0]+'</td><td>'+slice_mm+'</td><td>'+xyz[2]+'</td></tr>';
+        ans += '<tr><td><a class="link" onclick="sbaViewer.selectOrigSlice('+os+')">'+k+'</a></td><td>'+full+'</td><td><a class="link" onclick="sbaViewer.selectOrigSlice('+os+');sbaPluginManager.plugins[\''+this.name.toLowerCase()+'\'].showDef(\''+k+'\',\''+m+'\')">def</a></td><td>'+xyz[0]+'</td><td>'+slice_mm+'</td><td>'+xyz[2]+'</td></tr>';
       }
     }
     ans += '</table></p>';

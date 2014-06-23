@@ -92,10 +92,10 @@ propertiesPlugin_class.prototype.activate = function(sbaViewer,divElem) {
   }
   if (window.RGB_CENTERS != undefined) {
     var ctr = RGB_CENTERS[rgbList[iLargest]];    
-    var xy = sbaViewer.svg2mm([ctr[1],ctr[2]]);
+    var xz = sbaViewer.svg2mm([ctr[1],ctr[2]]);
     var label = rgbList.length>1 ? 'Center of largest subregion' : 'Center';
     if (ctr != undefined) {
-      attr[label+' [mm]'] = Math.round(100*xy[0])/100+'; '+Math.round(100*SLICE_POS[ctr[0]])/100+'; '+Math.round(100*xy[1])/100;
+      attr[label+' [mm]'] = Math.round(100*xz[0])/100+'; '+Math.round(100*SLICE_POS[ctr[0]])/100+'; '+Math.round(100*xz[1])/100;
       attr[label+' [svg]'] = ctr[1]+'; '+ctr[0]+'; '+ctr[2]+' <a class="link" onclick="var os='+ctr[0]+';markers=[new sbaMarker_class(\''+acr+'\',os,['+ctr[1]+','+ctr[2]+'])];sbaViewer.addMarkers(markers,0);sbaViewer.selectOrigSlice(os);">[show marker]</a>';
     } else {
       attr[label+' [mm]'] = '[unknown]';
@@ -114,18 +114,23 @@ propertiesPlugin_class.prototype.activate = function(sbaViewer,divElem) {
 function sbaPluginWindow_class(divElemId) {
   this.divElemId = divElemId; // this is also the window name
   this.activePluginName = undefined;
-  this.history = [undefined];
-  this.historyIndex = 0;
+  //this.history = [undefined];
+  //this.historyIndex = 0;
 }
 
 sbaPluginWindow_class.prototype.activatePlugin = function(pluginName,sbaViewer,pluginQuery) {
-  if (pluginName == undefined) {
-    var plugin = new menuPlugin_class(this.divElemId);
-    var pluginName = plugin.name;
-  } else {
-    var plugin = sbaPluginManager.getPlugin(pluginName);
-    if (!plugin) return;
-    plugin.setQuery(pluginQuery);
+  var plugin;
+  if (pluginName) {
+    plugin = sbaPluginManager.getPlugin(pluginName);
+    if (plugin) { 
+      if (pluginQuery) plugin.setQuery(pluginQuery);
+    } else {
+      globalErrorConsole.addError('Invalid plugin "'+pluginName+'"');
+    }
+  }
+  if (!plugin) {
+    plugin = new menuPlugin_class(this.divElemId);
+    pluginName = plugin.name;
   }
   if (plugin.externalLink()) {
     plugin.activate(sbaViewer);
@@ -133,6 +138,8 @@ sbaPluginWindow_class.prototype.activatePlugin = function(pluginName,sbaViewer,p
   }
   this.render(plugin,sbaViewer);
   this.activePluginName = pluginName;
+  /*
+  // remember history
   pluginPath = pluginName;
   if (pluginQuery != undefined) pluginPath += '?'+pluginQuery;
   if (this.history[this.historyIndex] != pluginPath) {
@@ -140,13 +147,16 @@ sbaPluginWindow_class.prototype.activatePlugin = function(pluginName,sbaViewer,p
     this.history.push(pluginPath);
     this.historyIndex++;
   }
+  */
 }
 
 sbaPluginWindow_class.prototype.applyStateChange = function(sbaViewer) {
-  var plugin = sbaPluginManager.getPlugin(this.activePluginName);
-  if (plugin != undefined) {
-    var contentElem = document.getElementById(this.divElemId+'_CONTENT');
-    plugin.applyStateChange(sbaViewer,contentElem);
+  if (this.activePluginName) {
+    var plugin = sbaPluginManager.getPlugin(this.activePluginName);
+    if (plugin != undefined) {
+      var contentElem = document.getElementById(this.divElemId+'_CONTENT');
+      plugin.applyStateChange(sbaViewer,contentElem);
+    }
   }
 }
 
@@ -191,7 +201,7 @@ function sbaPluginManager_class() {
 sbaPluginManager_class.prototype.addPlugin = function(pluginName,sbaViewer) {
   var className = pluginName.toLowerCase()+'Plugin_class';
   if (window[className]) {
-    this.plugins[pluginName] = new window[className](pluginName,sbaViewer);
+    this.plugins[pluginName.toLowerCase()] = new window[className](pluginName,sbaViewer);
   } else {
     globalErrorConsole.addError('Cannot find plugin class "'+className+'"');
   }
@@ -213,7 +223,7 @@ sbaPluginManager_class.prototype.applyStateChange = function(sbaViewer) {
 }
 
 sbaPluginManager_class.prototype.getPlugin = function(pluginName) {
-  return this.plugins[pluginName];
+  return this.plugins[pluginName.toLowerCase()];
 }
 
 sbaPluginManager_class.prototype.getWindow = function(windowName) {

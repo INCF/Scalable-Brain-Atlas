@@ -270,9 +270,9 @@ function [val,tp] = parse_value
 end
 
 function error_pos(msg)
-	poss = max(min([pos-15 pos-1 pos pos+20],len),1);
+	poss = max(min([pos-15 pos-1 pos pos+20],[len len len len]),[1 1 1 1]);
 	if poss(3) == poss(2)
-		poss(3:4) = poss(2)+[0 -1];         % display nothing after
+		poss(2) = poss(1)-1; % display nothing before
 	end
 	msg = [sprintf(msg, pos) ' : ... ' S(poss(1):poss(2)) '<error>' S(poss(3):poss(4)) ' ... '];
 	ME = MException('JSONparser:invalidFormat', msg);

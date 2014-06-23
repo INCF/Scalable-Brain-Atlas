@@ -35,6 +35,7 @@ if ($runLevel == 0) {
    * Interactive mode
    */
   echo '<html><head>';
+  echo '<meta http-equiv="content-type" content="text/html; charset=UTF-8">';
   echo '<script type="text/javascript" src="../shared-js/browser.js"></script>';
   echo $siteMap->windowTitle();
   echo $siteMap->clientScript();

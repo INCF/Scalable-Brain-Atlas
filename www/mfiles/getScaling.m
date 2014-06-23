@@ -13,7 +13,7 @@ function [scaling] = getScaling(template)
 % Rembrandt Bakker, 2010
 %
 
-baseUrl = getBaseUrl()
+baseUrl = getBaseUrl();
 tmp = urlread([baseUrl 'mfiles/get_config.php'],'get',{'template',template});
 [config,tp] = json_decode(tmp);
 tmp = urlread([baseUrl 'mfiles/get_slicepos.php'],'get',{'template',template});

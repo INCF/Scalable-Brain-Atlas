@@ -88,7 +88,7 @@ cocomacPlugin_class.prototype.retrieveConnectivity = function(originSite) {
   var args = {};
   args.originSites = originSite;
   args.terminalSites = this.brainMap;
-  var req = new jsonRequest_class('plugins/cocomac_request.php',args);
+  var req = new jsonRPC_class('plugins/cocomac_request.php',args);
 
   // response handler
   var acrStart = this.brainMap.length+1;

@@ -20,5 +20,5 @@
   "slicePositionUnit": "",
   "slicePositionDescription": "no description available",
   "atlasSpace": "native",
-  "defaultPlugins": ["RegionTree","Properties","AddMarker"]
+  "defaultPlugins": ["RegionTree","Properties","AddMarker","sbaLookup"]
 }

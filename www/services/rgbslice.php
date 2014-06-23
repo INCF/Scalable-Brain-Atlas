@@ -9,6 +9,7 @@ $info = json_decode(
 SITEMAP
 ,TRUE);
 
+ini_set('display_errors',1);
 require_once('../shared-lib/sitemap.php');
 require_once('../shared-lib/applet.php');
 $siteMap = new siteMap_class($info);
@@ -22,17 +23,17 @@ $f->setChoices(listTemplates('friendlyNames'),NULL);
 $applet->addFormField('template',$f);
 $applet->addFormField('slice',new numField_class('Slice (1 = most anterior)',$attrs,1,999));
 $applet->addFormField('size',new selectField_class('Image size',NULL,array('S'=>'Small','M'=>'Medium','L'=>'Large'),'M'));
-$applet->addFormField('format',new selectField_class('Image format',NULL,array('png'=>'PNG (raster)','svg'=>'SVG (vector)'),'PNG'));
+$applet->addFormField('format',new selectField_class('Image format',NULL,array('png'=>'PNG (raster)','svg'=>'SVG (vector)'),'png'));
 
 $errors = $applet->parseAndValidateInputs($_REQUEST);
 $template = $_REQUEST['template'];
-$runLevel = $applet->runLevel($_REQUEST['run'],$template);
 
-if ($runLevel == 0) {
+if (!isset($_REQUEST['template'])) {
 	/*
 	 * The following code is used when applet is called in interactive mode
 	 */
 	echo '<html><head>';
+  echo '<meta http-equiv="content-type" content="text/html; charset=UTF-8">';
 	echo '<script type="text/javascript" src="../shared-js/browser.js"></script>';
 	echo $siteMap->windowTitle();
 	echo $siteMap->clientScript();
@@ -109,8 +110,7 @@ if (!isset($lastmodified_cache) || $lastmodified_cache < $lastmodified_script ||
 		$im->writeImage($pngfile);
 		$im->destroy();
 	}
-	exec('convert -colorspace RGB -depth 8 -type TrueColor +antialias "MSVG:'.$svgfile.'" "'.$pngfile.'"');
-	//exec('convert +antialias "'.$svgfile.'" "'.$pngfile.'"');
+	exec('convert -colorspace sRGB +antialias "'.$svgfile.'" "'.$pngfile.'"');
 }
 
 // redirect to the appropriate cached image

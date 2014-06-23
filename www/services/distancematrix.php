@@ -3,7 +3,7 @@ ini_set('display_errors',1);
 $info = json_decode(
 <<<SITEMAP
 {
-  "path": "Scalable Brain Atlas|services|disctance matrix",
+  "path": "Scalable Brain Atlas|services|distance matrix",
   "title": "Matrix with euclidian distances between region centers within a hemisphere.",
   "description": "Returns a table (tab-separated) with the euclidian distances [mm] between <a href=\"../services/regioncenters.php\">region centers</a> within a hemisphere, for a given atlas template"
 }
@@ -39,6 +39,7 @@ if ($runLevel == 0) {
 	 * Interactive mode
 	 */
   echo '<html><head>';
+  echo '<meta http-equiv="content-type" content="text/html; charset=UTF-8">';
 	echo '<script type="text/javascript" src="../shared-js/browser.js"></script>';
 	echo $siteMap->windowTitle();
 	echo $siteMap->clientScript();

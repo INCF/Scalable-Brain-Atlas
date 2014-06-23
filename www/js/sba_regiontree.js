@@ -60,16 +60,6 @@ regionNode_class.prototype.asNestedArray = function(acr2full,minViewable,nestedA
 }
 
 regionNode_class.prototype.isViewable = function(depth) {
-/*
-  if (depth == undefined) depth=0;
-  if (depth>20) return false;
-  if (this.rgb != undefined) return true;
-  var ch = this.children;
-  for (var k in ch) if (ch.hasOwnProperty(k)) {
-    if (ch[k].isViewable(depth+1)) return true;
-  }
-  return false;
-*/
   return (this.numViewable>0);
 }
 
@@ -150,28 +140,22 @@ regionTree_class = function(acr2parent,rgb2acr,brainRegions,acr2nn,orphanParentA
 
   var orphanParent;
   for (var k in this.regionList) {
-    if (this.regionList[k].parent == this.rootNode) {
-      var node = this.regionList[k];
+    var node = this.regionList[k];
+    if (node == this.rootNode) continue;
+    if (node.parent == this.rootNode) {
+      // node is an orphan: has no parent
       if (node.children.length == 0) {
-        // node is an orphan: has no parent (other than ROOT) and no children
-        if (orphanParentAcr != false) {
-          // include unassigned nodes
+        // node also has no children
+        if (orphanParentAcr) {
+          orphanParent = this.regionList[orphanParentAcr];
           if (orphanParent == undefined) {
-            if (orphanParentAcr == true || orphanParentAcr == undefined) orphanParent = this.rootNode;
-            else {
-              orphanParent = this.regionList[orphanParentAcr];
-              if (orphanParent == undefined) {
-                orphanParent = this.newNode(orphanParentAcr,this.rootNode);
-                this.rootNode.addChild(orphanParent);
-              }
-            }
+            orphanParent = this.newNode(orphanParentAcr,this.rootNode);
+            this.rootNode.addChild(orphanParent);
           }
           node.parent = orphanParent;
-          orphanParent.addChild(node);
         }
-      } else {
-        this.rootNode.addChild(node);
       }
+      node.parent.addChild(node);
     }
   }
   

@@ -64,6 +64,8 @@ The Scalable Brain Atlas (SBA) is a fully web-based display engine for brain atl
   <td rowspan="3" style="width: 180px"><img src="../img/macaquebrain.png" alt="Macaque brain"/></td>
   <td>The <b><a href="../PHT00">Paxinos Rhesus Monkey atlas (2000)</a></b></li></td>
 </tr><tr>
+  <td>The <b><a href="../DB08">NeuroMaps Macaque atlas (2008)</a></b></li></td>
+</tr><tr>
   <td>
   Various templates available through <a href="http://brainvis.wustl.edu/wiki/index.php/Caret:About">Caret</a>, registered to F99 space:
   <ul>
@@ -74,18 +76,21 @@ The Scalable Brain Atlas (SBA) is a fully web-based display engine for brain atl
     <li><b><a href="../MMFetal11_on_F99">Markov, Misery et al. (2011)</li>
     <li><b><a href="../MERetal12_on_F99">Markov, Ercsey-Ravas et al. (2012)</li></ul></td>
 </tr><tr>
-  <td>The <b><a href="../DB08">NeuroMaps Macaque atlas (2008)</a></b></li></td>
-</tr><tr>
   <td colspan="2" class="species-header"><h2 style="margin: 0px">Mouse atlases</h2></td>
 </tr><tr>
   <td rowspan="2"><img src="../img/mousebrain.png" alt="Mouse brain"/></td>
-  <td>The INCF <b><a href="../WHS11">Waxholm Space for the mouse (2011)</a></b><br/>
-  [archived: <b><a href="../WHS10">2010 version</a>, <a href="../WHS09">2009 version</a></b>]
+  <td>The INCF <b><a href="../WHS12">Waxholm Space for the mouse (2012)</a></b><br/>
+  [archived: <b><a href="../WHS11">2011 version</a>, <a href="../WHS10">2010 version</a>, <a href="../WHS09">2009 version</a></b>]
   </td>
 </tr><tr>
   <td>The <b><a href="../ABA12">Allen Mouse Brain volumetric atlas (ABA12)</a></b></br>
   [archived: <b><a href="../ABA07">2007 version</a></b>]
   </td>
+</tr><tr>
+  <td colspan="2" class="species-header"><h2 style="margin: 0px">Rat atlas</h2></td>
+</tr><tr>
+  <td rowspan="1"><img src="../img/ratbrain.png" alt="Rat brain"/></td>
+  <td>The <b><a href="../CBWJ13_age_P80">MR-histology atlas of Calabrese et al.</a></b> at age P80</td>
 </tr><tr>
   <td colspan="2" class="species-header"><h2 style="margin: 0px">Human atlases</h2></td>
 </tr><tr>
@@ -97,6 +102,11 @@ The Scalable Brain Atlas (SBA) is a fully web-based display engine for brain atl
 </tr><tr>  
   <td>The <b><a href="../B05_on_Conte69">Brodmann areas</a></b>, projected on Conte69 space.
   </td>
+</tr><tr>  
+  <td colspan="2" class="species-header"><h2 style="margin: 0px">Marmoset atlas</h2></td>
+</tr><tr>
+  <td rowspan="1"><center><img src="../img/marmosetbrain.png" alt="Marmoset brain"/></center></td>
+  <td>The <b><a href="../PWPRT12">Marmoset</a></b> atlas in Stereotactic Coordinates</td>
 </tr>
 </table>
 <p/>
@@ -123,23 +133,31 @@ The SBA was first presented as a poster and demo session at the INCF booth of SF
 <p/>
 <b>What's new</b>
 <ul>
-<li>2013-01: Renamed MM11_on_F99 to MMFetal11_on_F99 to be consistent with MERetal12_on_F99.
-<li>2013-01: Added <a href="http://scalablebrainatlas.incf.org/MERetal12_on_F99">MERetal12_on_F99</a> template (Caret based, Macaque).
-<li>2013-01: Fixed in Landmarks plugin: Crosshair markers animated dashoffset didn't work properly in Firefox. Now animating stroke-width.
-<li>2013-01: Fixed AddMarker plugin: markers pointed approx 15 pixels too low in 3D view in all browsers.
-<li>2013-01: Fixed in AddMarker plugin: balloon-style markers pointed a few pixels below coordinate in 2D view in Firefox.
-<li>2012-05: New version of <a href="http://scalablebrainatlas.incf.org/ABA12">Allen Mouse Brain Atlas</a>.
-<li>2012-05: New human template: <a href="http://scalablebrainatlas.incf.org/B05_on_Conte69">Brodmann areas</a> in Conte69 space.
-<li>2012-04: New macaque template:  <a href="http://scalablebrainatlas.incf.org/MM11_on_F99">Markov and Misery delineation</a> in F99 space.
-<li>2012-04: New human template: Eickhoff et al., cytoarchitectonic parcellation in MNI space.
-<li>2012-03: CoCoMac plugin improved: tabular view links back to CoCoMac axonal projections search query
-<li>2012-01: <a href="http://scalablebrainatlas.incf.org/WHS10?plugin=Landmarks">Landmarks</a> updated for WHS10/WHS11 template
-<li>2011-09: An updated version of the Waxholm mouse atlas has been imported: <a href="http://scalablebrainatlas.incf.org/WHS11">WHS11</a>, it has a hierarchical region tree and supports the NeuroLex plugin
-<li>2011-09: <a href="http://scalablebrainatlas.incf.org/WHS10?plugin=Landmarks">Landmarks</a> updated for WHS10 template
-<li>2011-09: Distance matrix service <a href="http://scalablebrainatlas.incf.org/services/distancematrix.php">added</a>
-<li>2011-08: Fixed 60 acronym mismatches (mostly capitalization) between CoCoMac and SBA to prevent empty results in cocomac plugin
-<li>2011-08: Created <a href="http://scalablebrainatlas.incf.org/WHS10?plugin=Landmarks">landmark plugin for WHS10</a> with Andreas Hess and Marina Sergejeva.
-<li>2011-08: Fixed 60 acronym mismatches (mostly capitalization) between CoCoMac and SBA to prevent empty results in cocomac plugin.
+<li>2014-02: Smoother convex hulls (using autotrace), see for example the FVE91_on_F99 template.</li>
+<li>2013-12: Experimental feature in WHS12 template only: try and press the <a href="/WHS12">Saggital slice button (right of 3d panel)</a></li>
+<li>2013-12: For templates that cover both hemispheres, you can now select to view left, right or both.</li>
+<li>2013-11: Marmoset template now has Nissl overlays, obtained with permission from Marmoset-brain.org.</li>
+<li>2013-10: New cross-template plugin: 'SBA Lookup', to find out which other atlases have a region with the same name as the active region.</li>
+<li>2013-10: New template: <a href="http://scalablebrainatlas.incf.org/PPWRT12">Marmoset</a></li>
+<li>2013-07: Better error handling for CoCoMac plugin</li>
+<li>2013-04: Uploaded the Scalable Brain Atlas viewer code to the public repository <a href="https://github.com/INCF/Scalable-Brain-Atlas">https://github.com/INCF/Scalable-Brain-Atlas</a>.</li>
+<li>2013-01: Renamed MM11_on_F99 to MMFetal11_on_F99 to be consistent with MERetal12_on_F99.</li>
+<li>2013-01: Added <a href="http://scalablebrainatlas.incf.org/MERetal12_on_F99">MERetal12_on_F99</a> template (Caret based, Macaque).</li>
+<li>2013-01: Fixed in Landmarks plugin: Crosshair markers animated dashoffset didn't work properly in Firefox. Now animating stroke-width.</li>
+<li>2013-01: Fixed AddMarker plugin: markers pointed approx 15 pixels too low in 3D view in all browsers.</li>
+<li>2013-01: Fixed in AddMarker plugin: balloon-style markers pointed a few pixels below coordinate in 2D view in Firefox.</li>
+<li>2012-05: New version of <a href="http://scalablebrainatlas.incf.org/ABA12">Allen Mouse Brain Atlas</a>.</li>
+<li>2012-05: New human template: <a href="http://scalablebrainatlas.incf.org/B05_on_Conte69">Brodmann areas</a> in Conte69 space.</li>
+<li>2012-04: New macaque template:  <a href="http://scalablebrainatlas.incf.org/MM11_on_F99">Markov and Misery delineation</a> in F99 space.</li>
+<li>2012-04: New human template: Eickhoff et al., cytoarchitectonic parcellation in MNI space.</li>
+<li>2012-03: CoCoMac plugin improved: tabular view links back to CoCoMac axonal projections search query</li>
+<li>2012-01: <a href="http://scalablebrainatlas.incf.org/WHS10?plugin=Landmarks">Landmarks</a> updated for WHS10/WHS11 template</li>
+<li>2011-09: An updated version of the Waxholm mouse atlas has been imported: <a href="http://scalablebrainatlas.incf.org/WHS11">WHS11</a>, it has a hierarchical region tree and supports the NeuroLex plugin</li>
+<li>2011-09: <a href="http://scalablebrainatlas.incf.org/WHS10?plugin=Landmarks">Landmarks</a> updated for WHS10 template</li>
+<li>2011-09: Distance matrix service <a href="http://scalablebrainatlas.incf.org/services/distancematrix.php">added</a></li>
+<li>2011-08: Fixed 60 acronym mismatches (mostly capitalization) between CoCoMac and SBA to prevent empty results in cocomac plugin</li>
+<li>2011-08: Created <a href="http://scalablebrainatlas.incf.org/WHS10?plugin=Landmarks">landmark plugin for WHS10</a> with Andreas Hess and Marina Sergejeva.</li>
+<li>2011-08: Fixed 60 acronym mismatches (mostly capitalization) between CoCoMac and SBA to prevent empty results in cocomac plugin.</li>
 <li>2011-08: Status of <a href="http://scalablebrainatlas.incf.org/ABA07">Allen Brain Mouse atlas</a> upgraded from "As Is" to "supported". Including Nissl!
 <li>2011-08: 3D view now fits better in its frame.
 <li>2011-08: WHS09 and WHS10 templates show additional overlay 'rgb'. It can be used to check the accuracy of the polygon extraction procedure (bitmap to curves). Other templates will follow.
