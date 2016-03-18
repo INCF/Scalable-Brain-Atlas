@@ -1,6 +1,7 @@
+/.gitignore
 *.pyc
-site/www/cache/*
-site/www/googlee3f1a15f1c785429.html
-site/templates
-old
-scratch
+/site/www/cache/*
+/site/www/googlee3f1a15f1c785429.html
+/site/templates
+/old
+/scratch
