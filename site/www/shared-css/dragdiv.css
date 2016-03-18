@@ -1,0 +1,9 @@
+div.clicktoclose {
+  font-weight: bold;
+  top: 0%; 
+  float: right;
+  color: #000;
+}
+div.clicktoclose:hover {
+  color: #f00;
+}

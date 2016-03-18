@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "width3d": {
+    "left": [0,0,0],
+    "main": [900,800,1200],
+    "right": [160,120,200]
+  },
+  "width2d": {
+    "left": [400,300,450],
+    "main": [300,350,500],
+    "right": [400,300,450]
+  },
+  "height2d": 440,
+  "height3d": 300,
+  "boundingBox": [0,0,8268,11692],
+  "hierarchyOrphanParent": false,
+  "hierarchyViewableOnly": true,
+  "sliceCoordSystem":"",
+  "slicePositionLabel": "",
+  "slicePositionUnit": "",
+  "slicePositionDescription": "no description available",
+  "atlasSpace": "native",
+  "defaultPlugins": ["RegionTree","Properties","AddMarker","sbaLookup","imaging"]
+}

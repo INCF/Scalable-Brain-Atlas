@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<style type="text/css">
+html {
+	height: 100%;
+}
+body {
+	background: #DDD;
+  margin: 0;
+	padding: 0;
+	height: 100%;
+}
+table {
+  border-collapse: collapse
+}
+div { 
+  position: relative
+}
+div.top {
+  border-bottom: 1px solid #C85;
+  padding: 0.5em 1em;
+  padding-bottom: 0.1em;
+  background: linear-gradient(#FFF,#EDA);
+}
+#pageMenu ul {
+  list-style-type: none;
+  padding: 0px 0px;
+  margin: 0em;
+  margin-top: 0.8em;
+}
+#pageMenu ul li {
+  display: inline;
+  border: 1px solid #ddd;
+  padding: 0.2em 2em;
+  margin: 8px;
+  background: #fff
+}
+div.top h1 { 
+  margin: 0.4em 0em;
+}
+div.top td { 
+  padding: 0em 0.5em;
+}
+div.top div { 
+  padding: 0em 0.5em; 
+}
+div.A4 {
+  max-width: 80em; 
+  margin: 0em auto;
+  border-left: 1px solid #aaa;
+  border-right: 1px solid #aaa;
+  background: #fff;
+  min-height: 101%; 
+}
+</style>
+</head>
+<body>
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', 'UA-60841864-1', 'auto');
+ga('send', 'pageview');
+</script>
+<div class="A4">
+  <div class="top">
+    <table><tr>
+      <td>
+        <div id="navigationBar"></div>
+        <div id="pageTitle"></div>
+        <div id="pageDescription"></div>
+      </td>
+    </tr></table>
+    <div id="pageMenu"></div>
+  </div>
+  <div style="padding: 1em 1em 1em 1em" id="pageContent"></div>
+</div>
+</body></html>

@@ -1,0 +1,11 @@
+* {
+  box-sizing: border-box;
+  position: relative;
+  font-family: Trebuchet MS, Helvetica, sans-serif;
+}
+a:link { text-decoration: none; color: blue }
+a:visited { text-decoration: none; color: blue }
+a:hover { text-decoration: underline; color: red }
+a.link-external {
+  background: url(../css/external.gif) no-repeat;
+}

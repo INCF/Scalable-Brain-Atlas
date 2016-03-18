@@ -1,0 +1,17 @@
+.comment {
+  font-style: italic;
+  color: #060;
+}
+.error {
+  font-style: italic;
+  font-weight: bold;
+  color: #E00;
+}
+div.ff_error_box {
+ border: 2px solid #F00;
+ padding: 2px;
+}
+div.ff_error_msg {
+  color: #A00;
+  font-style: italic;
+}

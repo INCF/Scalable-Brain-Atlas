@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding ="UTF-8"?>
+
+<X3D profile="Immersive" version="3.0">
+  <head>
+    <meta name="generator" content="Rembrandt Bakker"/>
+    <meta name="numberofelements" content="1"/>
+  </head>
+  <Scene pickMode="color">
+    <Background skyColor="0 0 0"/>
+    <Viewpoint DEF="VIEW" fieldOfView="0.523599" position="-178.447 38.4135 30.4774" description="Default View" orientation="-0.57735 0.57735 0.57735 -2.0944" centerOfRotation="35.7196 38.4135 30.4774"/>
+    <NavigationInfo type='"EXAMINE" "FLY" "ANY"' speed="4" headlight="true"/>
+    <DirectionalLight ambientIntensity="1" intensity="0" color="1 1 1"/>
+    <Transform DEF="ROOT" translation="0 0 0">
+      <Shape>
+        <Appearance>
+          <Material ambientIntensity="0" emissiveColor="0 0 0" diffuseColor="1 1 1" specularColor="0 0 0" shininess="0.0078125" transparency="0"/>
+        </Appearance>
+        <IndexedFaceSet DEF="SURF" solid="false" colorPerVertex="true" normalPerVertex="false" coordIndex="">
+          <Coordinate point=""/>
+        </IndexedFaceSet>
+      </Shape>
+    </Transform>
+  </Scene>
+</X3D>
